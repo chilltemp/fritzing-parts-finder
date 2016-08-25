@@ -1,0 +1,16 @@
+{
+  "files": [
+    "typings/index.d.ts",
+    "src/main.ts",
+    "src/lib/interfaces.ts",
+    "src/lib/utils.ts",
+    "src/lib/PartSource.ts",
+    "src/lib/FritzingPart.ts"
+  ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "target": "es6",
+    "module": "commonjs"
+  }
+}
