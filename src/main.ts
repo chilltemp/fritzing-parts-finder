@@ -13,8 +13,10 @@ main()
   });
 
 async function main() {
+  let parts = [] as [FritzingPart];
+
   for (let src of config.sources) {
-    let target = path.resolve(config.localPath, src.name);
+    let target = path.resolve(config.tempPath, src.name);
     let partSource = new PartSource(src, target);
 
     console.log(chalk.cyan('Fetching:'), chalk.magenta(partSource.name), 'from', partSource.url);
@@ -24,12 +26,29 @@ async function main() {
     let partFiles = await partSource.findPartFilesAsync();
 
     console.log(chalk.cyan('Processing:'), countFileTypes(partFiles));
+    let processed = [] as [string];
     for (let fileName of partFiles) {
-      if(path.extname(fileName) === '.fzp') {
-      let part = await FritzingPart.fromFile(fileName);
-      console.log(part);
-    }}
+      try {
+        if (path.extname(fileName) === '.fzp') {
+          let part = await FritzingPart.fromFile(fileName);
+
+          processed.push(fileName);
+          parts.push(part);
+          // console.log(part);
+        }
+      } catch (e) {
+        console.error(chalk.red('Error reading part:'), fileName);
+        console.error(e);
+      }
+    }
+
+    console.log(chalk.cyan('Processed:'), countFileTypes(processed));
   }
+
+  console.log(chalk.cyan('Writing index:'), parts.length, 'parts');
+  let indexFileName = path.join(config.outputPath, 'index.json');
+  console.log(indexFileName);
+  await utils.writeFileAsync(indexFileName, JSON.stringify(parts));
 }
 
 function countFileTypes(files: [string]): { [key: string]: number } {

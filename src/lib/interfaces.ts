@@ -1,5 +1,6 @@
 export interface IConfig {
-  localPath: string;
+  tempPath: string;
+  outputPath: string;
   sources: [ISourceDef];
 }
 

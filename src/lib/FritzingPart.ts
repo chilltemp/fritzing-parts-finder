@@ -2,10 +2,22 @@ import * as utils from './utils';
 
 export class FritzingPart {
   public static async fromFile(fileName: string): Promise<FritzingPart> {
-    let src = await utils.readXmlFileAsync(fileName);
-    return new FritzingPart(src);
+    let content = await utils.readFileAsync(fileName);
+    return await FritzingPart.fromXml(content);
   }
 
+  public static async fromXml(xml: string): Promise<FritzingPart> {
+    let source = await utils.convertFromXml(xml);
+    let part = new FritzingPart();
+
+    part.version = source.module.version;
+    part.title = source.module.title;
+    part.label = source.module.label;
+    part.date = source.module.date;
+    part.description = source.module.description;
+
+    return part;
+  }
 
   public version: number;
   public author: string;
@@ -15,19 +27,7 @@ export class FritzingPart {
   public tags: [string];
   public description: string;
 
-  constructor(copyFrom?: any) {
+  constructor() {
     this.tags = [] as [string];
-
-    if (copyFrom) {
-      this.version = copyFrom.version;
-      this.title = copyFrom.title;
-      this.label = copyFrom.label;
-      this.date = copyFrom.date;
-      this.description = copyFrom.description;
-
-      if (copyFrom.tags && Array.isArray(copyFrom.tags)) {
-        this.tags = copyFrom.tags.slice(0);
-      }
-    }
   }
 }

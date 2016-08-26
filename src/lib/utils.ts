@@ -1,9 +1,21 @@
 import * as fs from 'fs';
 import * as xml2js from 'xml2js';
 
+export function writeFileAsync(fileName: string, content:string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(fileName, content, (err) => {
+      if(err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 export function readFileAsync(fileName: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    fs.readFile(fileName, null, (err, content) => {
+    fs.readFile(fileName, 'utf8', (err, content) => {
       if (err) {
         reject(err);
       } else {
@@ -13,14 +25,9 @@ export function readFileAsync(fileName: string): Promise<string> {
   });
 }
 
-export async function readXmlFileAsync(fileName: string): Promise<any> {
-  let content = await readFileAsync(fileName);
-  return await convertFromXml(content);
-}
-
-function convertFromXml(content: string): Promise<any> {
+export function convertFromXml(content: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    xml2js.parseString(content, null, (err, result) => {
+    xml2js.parseString(content, { explicitArray: false}, (err, result) => {
       if (err) {
         reject(err);
       } else {
