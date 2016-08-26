@@ -1,27 +1,18 @@
 import * as chalk from 'chalk';
 import * as path from 'path';
-import * as commander from 'commander';
+import * as utils from './lib/utils';
 import { PartSource } from './lib/PartSource';
 import { IConfig } from './lib/interfaces.ts';
 import { FritzingPart } from './lib/FritzingPart';
 let config = require('./config') as IConfig;
-let pkg = require('../package');
 
-interface IProgramArgs extends commander.ICommand {
-  path?: string;
-}
 
-const args: IProgramArgs = commander
-  .version(pkg.version)
-  .option('-p, --path <path>', 'Path for downloaded files')
-  .parse(process.argv);
-
-main(args)
+main()
   .catch((err) => {
     console.error(err);
   });
 
-async function main(argv: IProgramArgs) {
+async function main() {
   for (let src of config.sources) {
     let target = path.resolve(config.localPath, src.name);
     let partSource = new PartSource(src, target);
