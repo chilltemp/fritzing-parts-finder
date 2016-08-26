@@ -1,2 +1,5 @@
 dist
 typings
+parts
+parts.tmp
+.vscode
