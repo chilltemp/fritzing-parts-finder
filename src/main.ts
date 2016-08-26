@@ -48,7 +48,7 @@ async function main() {
   console.log(chalk.cyan('Writing index:'), parts.length, 'parts');
   let indexFileName = path.join(config.outputPath, 'index.json');
   console.log(indexFileName);
-  await utils.writeFileAsync(indexFileName, JSON.stringify(parts));
+  await utils.writeFileAsync(indexFileName, JSON.stringify(parts, null, 2));
 }
 
 function countFileTypes(files: [string]): { [key: string]: number } {

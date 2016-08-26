@@ -7,6 +7,7 @@
     "simple-git": "registry:npm/simple-git#1.47.0+20160823074737"
   },
   "globalDependencies": {
+    "html-to-text": "registry:dt/html-to-text#1.4.0+20151110020217",
     "node": "registry:env/node#4.0.0+20160824014937",
     "xml2js": "registry:dt/xml2js#0.0.0+20160317120654"
   }

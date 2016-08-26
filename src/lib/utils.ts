@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as xml2js from 'xml2js';
+import * as htmlToText from 'html-to-text';
 
 export function writeFileAsync(fileName: string, content: string): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -35,4 +36,21 @@ export function convertFromXml(content: string): Promise<any> {
       }
     });
   });
-} 
+}
+
+export function makeSafeString(input: any): string {
+  if (typeof input === 'undefined' || input === null || input === '') {
+    return null;
+  }
+
+  if (typeof input !== 'string') {
+    input = input.toString();
+  }
+
+  let options: HtmlToTextOptions = {
+    hideLinkHrefIfSameAsText: true,
+    wordwrap: null,
+  };
+
+  return htmlToText.fromString(input as string, options);
+}
