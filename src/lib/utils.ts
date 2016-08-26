@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as xml2js from 'xml2js';
 
-export function writeFileAsync(fileName: string, content:string): Promise<any> {
+export function writeFileAsync(fileName: string, content: string): Promise<any> {
   return new Promise((resolve, reject) => {
     fs.writeFile(fileName, content, (err) => {
-      if(err) {
+      if (err) {
         reject(err);
       } else {
         resolve();
@@ -27,7 +27,7 @@ export function readFileAsync(fileName: string): Promise<string> {
 
 export function convertFromXml(content: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    xml2js.parseString(content, { explicitArray: false}, (err, result) => {
+    xml2js.parseString(content, { explicitArray: false }, (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -35,4 +35,4 @@ export function convertFromXml(content: string): Promise<any> {
       }
     });
   });
-}
+} 
