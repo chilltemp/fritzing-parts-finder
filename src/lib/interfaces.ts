@@ -1,10 +1,13 @@
-export interface IConfig {
+export interface IPartsFinderConfig {
   tempPath: string;
   outputPath: string;
-  sources: [ISourceDef];
+  sources: [IPartsFinderSource];
 }
 
-export interface ISourceDef {
+export interface IPartsFinderSource {
   name: string;
   url: string;
+  partsPath: string;
+  svgPath: string;
 }
+

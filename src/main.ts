@@ -2,14 +2,14 @@ import * as chalk from 'chalk';
 import * as path from 'path';
 import * as utils from './lib/utils';
 import { PartSource } from './lib/PartSource';
-import { IConfig } from './lib/interfaces.ts';
+import { IPartsFinderConfig } from './lib/interfaces.ts';
 import { FritzingPart } from './lib/FritzingPart';
-let config = require('./config') as IConfig;
+let config = require('./config') as IPartsFinderConfig;
 
 
 main()
   .catch((err) => {
-    console.error(err);
+    console.error(chalk.red(err && err.stack ? err.stack : err));
   });
 
 async function main() {

@@ -1,8 +1,16 @@
 {
-    "tempPath": "parts.tmp",
-    "outputPath": "parts",
-    "sources": [
-        { "name": "adafruit", "url": "https://github.com/adafruit/Fritzing-Library.git"},
-        { "name": "fritzing", "url": "https://github.com/fritzing/fritzing-parts" }
-    ]
+  "tempPath": "parts.tmp",
+  "outputPath": "parts",
+  "sources": [
+    {
+      "name": "adafruit",
+      "url": "https://github.com/adafruit/Fritzing-Library.git"
+    },
+    {
+      "name": "fritzing",
+      "url": "https://github.com/fritzing/fritzing-parts",
+      "partsPath": "core",
+      "svgPath": "svg"
+    }
+  ]
 }
