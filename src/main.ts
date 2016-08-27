@@ -30,7 +30,7 @@ async function main() {
     for (let fileName of partFiles) {
       try {
         if (path.extname(fileName) === '.fzp') {
-          let part = await FritzingPart.fromFile(fileName);
+          let part = await partSource.readPart(fileName);
 
           processed.push(fileName);
           parts.push(part);
