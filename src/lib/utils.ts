@@ -2,6 +2,15 @@ import * as fs from 'fs';
 import * as xml2js from 'xml2js';
 import * as htmlToText from 'html-to-text';
 
+export function isSafeRelativePath(root: string, relative: string): boolean {
+  if (!relative) {
+    return true;
+  }
+
+  // TODO: BETTER!!
+  return typeof relative === 'string' && relative.indexOf('..') === -1;
+}
+
 export function writeFileAsync(fileName: string, content: string): Promise<any> {
   return new Promise((resolve, reject) => {
     fs.writeFile(fileName, content, (err) => {

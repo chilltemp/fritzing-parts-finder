@@ -13,6 +13,7 @@ export class FritzingPart {
   constructor() {
     this.tags = [] as [string];
     this.properties = {} as { [key: string]: string };
+    this.views = {} as {[key: string]: PartView};
   }
 }
 

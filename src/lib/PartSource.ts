@@ -4,11 +4,11 @@ import * as simpleGit from 'simple-git';
 import * as fs from 'fs';
 import * as utils from './utils';
 import { IPartsFinderSource } from './interfaces.ts';
-import { FritzingPart } from './FritzingPart';
+import { FritzingPart, PartView } from './FritzingPart';
 
 export class PartSource {
   public name: string;
-  public target: string;
+  public targetPath: string;
   public url: string;
   private partsPattern: string;
   private svgPath: string;
@@ -16,20 +16,25 @@ export class PartSource {
   constructor(src: IPartsFinderSource, target: string) {
     this.name = src.name;
     this.url = src.url;
+    this.svgPath = src.svgPath;
+    this.targetPath = target;
+
     this.partsPattern = src.partsPath
       ? path.join(target, src.partsPath, '**/*.fz*')
       : path.join(target, '**/*.fz*');
-    this.svgPath = src.svgPath;
-    this.target = target;
+
+    if (src.svgPath && !utils.isSafeRelativePath(target, src.svgPath)) {
+      throw new Error('Invalid svgPath!');
+    }
   }
 
   public fetchSourceAsync(): Promise<any> {
 
-    return this.fileExists(this.target)
+    return this.fileExists(this.targetPath)
       .then((exists) => {
         if (exists) {
           return new Promise((resolve, reject) => {
-            let git = simpleGit(this.target);
+            let git = simpleGit(this.targetPath);
             git.pull((err: any) => {
               if (err) {
                 reject(err);
@@ -41,7 +46,7 @@ export class PartSource {
         } else {
           return new Promise((resolve, reject) => {
             let git = simpleGit();
-            git.clone(this.url, this.target, (err: any) => {
+            git.clone(this.url, this.targetPath, (err: any) => {
               if (err) {
                 reject(err);
               } else {
@@ -84,7 +89,7 @@ export class PartSource {
     part.date = utils.makeSafeString(source.module.date);
     part.description = utils.makeSafeString(source.module.description);
 
-    if (source.module.tags &&      source.module.tags.tag ) {
+    if (source.module.tags && source.module.tags.tag) {
       this.loadStringsFromXml(part.tags, source.module.tags.tag);
     }
 
@@ -93,10 +98,35 @@ export class PartSource {
     }
 
     if (source.module.views) {
-      console.log(source.module.views);
+      for (let key in source.module.views) {
+        if (source.module.views.hasOwnProperty(key) && source.module.views[key].layers) {
+          part.views[key] = this.readViewFromXml(source.module.views[key].layers);
+        }
+      }
     }
 
     return part;
+  }
+
+  private readViewFromXml(xml: any): PartView {
+    let view = new PartView();
+    if (xml.$ && utils.isSafeRelativePath(this.targetPath, xml.$.image)) {
+      view.fileName = xml.$.image;
+    }
+
+    if (xml.layer) {
+      if (Array.isArray(xml.layer)) {
+        for (let layer of xml.layer) {
+          if (layer.$ && typeof layer.$.layerId === 'string') {
+            view.layers.push(layer.$.layerId);
+          }
+        }
+      } else {
+        view.layers.push(xml.layer.$.layerId);
+      }
+    }
+
+    return view;
   }
 
   private loadStringsFromXml(target: [string], xmlArray: any) {

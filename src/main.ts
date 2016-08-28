@@ -22,7 +22,7 @@ async function main() {
     console.log(chalk.cyan('Fetching:'), chalk.magenta(partSource.name), 'from', partSource.url);
     await partSource.fetchSourceAsync();
 
-    console.log(chalk.cyan('Scanning:'), partSource.target);
+    console.log(chalk.cyan('Scanning:'), partSource.targetPath);
     let partFiles = await partSource.findPartFilesAsync();
 
     console.log(chalk.cyan('Processing:'), countFileTypes(partFiles));
