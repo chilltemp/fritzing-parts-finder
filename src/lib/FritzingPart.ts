@@ -19,6 +19,7 @@ export class FritzingPart {
 
 export class PartView {
   public fileName: string;
+  public image: string;
   public layers: [string];
 
   constructor() {

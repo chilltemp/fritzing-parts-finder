@@ -10,7 +10,7 @@
       "name": "fritzing",
       "url": "https://github.com/fritzing/fritzing-parts",
       "partsPath": "core",
-      "svgPath": "svg"
+      "svgPath": "svg/core"
     }
   ]
 }

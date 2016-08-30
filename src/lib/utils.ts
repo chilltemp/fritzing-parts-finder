@@ -11,6 +11,14 @@ export function isSafeRelativePath(root: string, relative: string): boolean {
   return typeof relative === 'string' && relative.indexOf('..') === -1;
 }
 
+export function fileExistsAsync(path: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    fs.access(path, fs.F_OK, (err) => {
+      resolve(!err);
+    });
+  });
+}
+
 export function writeFileAsync(fileName: string, content: string): Promise<any> {
   return new Promise((resolve, reject) => {
     fs.writeFile(fileName, content, (err) => {

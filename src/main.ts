@@ -30,7 +30,7 @@ async function main() {
     for (let fileName of partFiles) {
       try {
         if (path.extname(fileName) === '.fzp') {
-          let part = await partSource.readPart(fileName);
+          let part = await partSource.readPartAsync(fileName);
 
           processed.push(fileName);
           parts.push(part);
@@ -48,7 +48,7 @@ async function main() {
   console.log(chalk.cyan('Writing index:'), parts.length, 'parts');
   let indexFileName = path.join(config.outputPath, 'index.json');
   console.log(indexFileName);
-  await utils.writeFileAsync(indexFileName, JSON.stringify(parts, null, 2));
+  await utils.writeFileAsync(indexFileName, JSON.stringify(parts));
 }
 
 function countFileTypes(files: [string]): { [key: string]: number } {

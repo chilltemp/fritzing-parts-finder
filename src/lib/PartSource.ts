@@ -28,34 +28,32 @@ export class PartSource {
     }
   }
 
-  public fetchSourceAsync(): Promise<any> {
+  public async fetchSourceAsync(): Promise<any> {
+    let exists = await utils.fileExistsAsync(this.targetPath);
 
-    return this.fileExists(this.targetPath)
-      .then((exists) => {
-        if (exists) {
-          return new Promise((resolve, reject) => {
-            let git = simpleGit(this.targetPath);
-            git.pull((err: any) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          });
-        } else {
-          return new Promise((resolve, reject) => {
-            let git = simpleGit();
-            git.clone(this.url, this.targetPath, (err: any) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          });
-        }
+    if (exists) {
+      return new Promise((resolve, reject) => {
+        let git = simpleGit(this.targetPath);
+        git.pull((err: any) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
       });
+    } else {
+      return new Promise((resolve, reject) => {
+        let git = simpleGit();
+        git.clone(this.url, this.targetPath, (err: any) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
   }
 
   public findPartFilesAsync(): Promise<[string]> {
@@ -70,10 +68,37 @@ export class PartSource {
     });
   }
 
-  public async readPart(fileName: string): Promise<FritzingPart> {
+  public async readPartAsync(fileName: string): Promise<FritzingPart> {
     let content = await utils.readFileAsync(fileName);
-    return await this.parsePartXml(content);
+    let part = await this.parsePartXml(content);
+
+    for (let key in part.views) {
+      if (part.views.hasOwnProperty(key) && part.views[key].fileName) {
+        part.views[key].image = await this.readImageAsync(fileName, part.views[key].fileName);
+      }
+    }
+
+    return part;
   }
+
+  private async readImageAsync(partFileName: string, imageFileName: string): Promise<string> {
+    let fullImageName = path.join(path.dirname(partFileName), imageFileName);
+
+    if (await utils.fileExistsAsync(fullImageName)) {
+      return await utils.readFileAsync(fullImageName);
+    }
+
+    if (this.svgPath) {
+      fullImageName = path.join(this.targetPath, this.svgPath, imageFileName);
+
+      if (await utils.fileExistsAsync(fullImageName)) {
+        return await utils.readFileAsync(fullImageName);
+      }
+    }
+
+    //throw new Error('Image not found: ' + imageFileName);
+  }
+
 
   private async parsePartXml(xml: string): Promise<FritzingPart> {
     let source = await utils.convertFromXml(xml);
@@ -110,9 +135,11 @@ export class PartSource {
 
   private readViewFromXml(xml: any): PartView {
     let view = new PartView();
-    if (xml.$ && utils.isSafeRelativePath(this.targetPath, xml.$.image)) {
-      view.fileName = xml.$.image;
+    if (!xml.$ || !xml.$.image || !utils.isSafeRelativePath(this.targetPath, xml.$.image)) {
+      throw new Error('Missing or invalid image.');
     }
+
+    view.fileName = xml.$.image;
 
     if (xml.layer) {
       if (Array.isArray(xml.layer)) {
@@ -155,15 +182,5 @@ export class PartSource {
       }
     }
   }
-
-
-  private fileExists(path: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      fs.access(path, fs.F_OK, (err) => {
-        resolve(!err);
-      });
-    });
-  }
-
 
 }
