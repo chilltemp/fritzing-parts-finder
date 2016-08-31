@@ -2,6 +2,7 @@
   "files": [
     "typings/index.d.ts",
     "src/main.ts",
+    "src/lib/git.ts",
     "src/lib/interfaces.ts",
     "src/lib/utils.ts",
     "src/lib/PartSource.ts",

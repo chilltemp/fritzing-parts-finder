@@ -1,5 +1,6 @@
 import * as chalk from 'chalk';
 import * as path from 'path';
+import * as ProgressBar from 'progress';
 import * as utils from './lib/utils';
 import { PartSource } from './lib/PartSource';
 import { IPartsFinderConfig } from './lib/interfaces.ts';
@@ -26,6 +27,8 @@ async function main() {
     let partFiles = await partSource.findPartFilesAsync();
 
     console.log(chalk.cyan('Processing:'), countFileTypes(partFiles));
+    let bar = new ProgressBar('[:bar]', {total: partFiles.length});
+
     let processed = [] as [string];
     for (let fileName of partFiles) {
       try {
@@ -40,6 +43,8 @@ async function main() {
         console.error(chalk.red('Error reading part:'), fileName);
         console.error(e);
       }
+
+      bar.tick();
     }
 
     console.log(chalk.cyan('Processed:'), countFileTypes(processed));
@@ -48,7 +53,7 @@ async function main() {
   console.log(chalk.cyan('Writing index:'), parts.length, 'parts');
   let indexFileName = path.join(config.outputPath, 'index.json');
   console.log(indexFileName);
-  await utils.writeFileAsync(indexFileName, JSON.stringify(parts));
+  await utils.writeFileAsync(indexFileName, JSON.stringify(parts, null, 2));
 }
 
 function countFileTypes(files: [string]): { [key: string]: number } {

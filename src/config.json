@@ -4,7 +4,7 @@
   "sources": [
     {
       "name": "adafruit",
-      "url": "https://github.com/adafruit/Fritzing-Library.git"
+      "url": "https://github.com/adafruit/Fritzing-Library"
     },
     {
       "name": "fritzing",

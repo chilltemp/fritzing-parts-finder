@@ -1,15 +1,23 @@
 import * as path from 'path';
 import * as glob from 'glob';
-import * as simpleGit from 'simple-git';
 import * as fs from 'fs';
 import * as utils from './utils';
+import * as git from './git';
+import * as URI from 'urijs';
 import { IPartsFinderSource } from './interfaces.ts';
 import { FritzingPart, PartView } from './FritzingPart';
+
+export enum ImageLoadStyle {
+  None,
+  Content,
+  Url
+}
 
 export class PartSource {
   public name: string;
   public targetPath: string;
   public url: string;
+  private loadImages: ImageLoadStyle = ImageLoadStyle.Url;
   private partsPattern: string;
   private svgPath: string;
 
@@ -32,27 +40,9 @@ export class PartSource {
     let exists = await utils.fileExistsAsync(this.targetPath);
 
     if (exists) {
-      return new Promise((resolve, reject) => {
-        let git = simpleGit(this.targetPath);
-        git.pull((err: any) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
+      return git.pullAsync(this.targetPath);
     } else {
-      return new Promise((resolve, reject) => {
-        let git = simpleGit();
-        git.clone(this.url, this.targetPath, (err: any) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
+      return git.cloneAsync(this.targetPath, this.url);
     }
   }
 
@@ -72,27 +62,59 @@ export class PartSource {
     let content = await utils.readFileAsync(fileName);
     let part = await this.parsePartXml(content);
 
-    for (let key in part.views) {
-      if (part.views.hasOwnProperty(key) && part.views[key].fileName) {
-        part.views[key].image = await this.readImageAsync(fileName, part.views[key].fileName);
-      }
+    if (this.loadImages !== ImageLoadStyle.None) {
+      await this.loadImagesAsync(fileName, part);
     }
 
     return part;
   }
 
-  private async readImageAsync(partFileName: string, imageFileName: string): Promise<string> {
-    let fullImageName = path.join(path.dirname(partFileName), imageFileName);
+  public async loadImagesAsync(fileName: string, part: FritzingPart): Promise<void> {
+    for (let key in part.views) {
+      if (part.views.hasOwnProperty(key) && part.views[key].fileName) {
+        let image = await this.readImageAsync(fileName, part.views[key].fileName);
 
-    if (await utils.fileExistsAsync(fullImageName)) {
-      return await utils.readFileAsync(fullImageName);
+        if (image) {
+          part.views[key].image = image;
+        }
+      }
     }
+  }
 
-    if (this.svgPath) {
-      fullImageName = path.join(this.targetPath, this.svgPath, imageFileName);
+  private async readImageAsync(partFileName: string, imageFileName: string): Promise<string> {
+    let filesToTry: [string] = [
+      path.join(path.dirname(partFileName), imageFileName),
+      path.join(this.targetPath, this.svgPath, imageFileName),
+    ];
 
-      if (await utils.fileExistsAsync(fullImageName)) {
-        return await utils.readFileAsync(fullImageName);
+    for (let tryMe of filesToTry) {
+      if (!(await utils.fileExistsAsync(tryMe))) {
+        continue;
+      }
+
+      switch (this.loadImages) {
+        case ImageLoadStyle.Content:
+          return await utils.readFileAsync(tryMe);
+
+        case ImageLoadStyle.Url:
+          let commit = await git.latestCommitAsync(tryMe);
+          let relPath = path.relative(this.targetPath, tryMe);
+
+          let uri = URI(this.url);
+          let basePath = uri.path();
+          relPath = path.join(basePath, commit, relPath);
+
+          if (uri.domain() === 'github.com') {
+            uri = uri.domain('cdn.rawgit.com');
+          }
+
+          return uri
+            .path(relPath)
+            .toString();
+
+        case ImageLoadStyle.None:
+        default:
+          return null;
       }
     }
 
