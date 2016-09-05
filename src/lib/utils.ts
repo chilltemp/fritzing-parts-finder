@@ -43,6 +43,8 @@ export function readFileAsync(fileName: string): Promise<string> {
   });
 }
 
+
+
 export function convertFromXml(content: string): Promise<any> {
   return new Promise((resolve, reject) => {
     xml2js.parseString(content, { explicitArray: false }, (err, result) => {

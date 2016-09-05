@@ -6,6 +6,8 @@
     "src/lib/interfaces.ts",
     "src/lib/utils.ts",
     "src/lib/PartSource.ts",
+    "src/lib/GitPartSource.ts",
+    "src/lib/ZipPartSource.ts",
     "src/lib/FritzingPart.ts"
   ],
   "compileOnSave": true,

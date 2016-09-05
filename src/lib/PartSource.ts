@@ -2,24 +2,28 @@ import * as path from 'path';
 import * as glob from 'glob';
 import * as fs from 'fs';
 import * as utils from './utils';
-import * as git from './git';
 import * as URI from 'urijs';
 import { IPartsFinderSource } from './interfaces.ts';
 import { FritzingPart, PartView } from './FritzingPart';
 
-export enum ImageLoadStyle {
-  None,
-  Content,
-  Url
+export interface IPartSource {
+  name: string;
+  targetPath: string;
+  url: string;
+  fetchSourceAsync(): Promise<any>;
+  findPartFilesAsync(): Promise<[string]>;
+  readPartAsync(fileName: string): Promise<FritzingPart>;
 }
 
-export class PartSource {
+export abstract class PartSource implements IPartSource {
+  // public static create(src: IPartsFinderSource, target: string): IPartSource {
+  // }
+
   public name: string;
   public targetPath: string;
   public url: string;
-  private loadImages: ImageLoadStyle = ImageLoadStyle.Url;
-  private partsPattern: string;
-  private svgPath: string;
+  protected partsPattern: string;
+  protected svgPath: string;
 
   constructor(src: IPartsFinderSource, target: string) {
     this.name = src.name;
@@ -36,38 +40,9 @@ export class PartSource {
     }
   }
 
-  public async fetchSourceAsync(): Promise<any> {
-    let exists = await utils.fileExistsAsync(this.targetPath);
-
-    if (exists) {
-      return git.pullAsync(this.targetPath);
-    } else {
-      return git.cloneAsync(this.targetPath, this.url);
-    }
-  }
-
-  public findPartFilesAsync(): Promise<[string]> {
-    return new Promise((resolve, reject) => {
-      glob(this.partsPattern, (err, matches) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(matches);
-        }
-      });
-    });
-  }
-
-  public async readPartAsync(fileName: string): Promise<FritzingPart> {
-    let content = await utils.readFileAsync(fileName);
-    let part = await this.parsePartXml(content);
-
-    if (this.loadImages !== ImageLoadStyle.None) {
-      await this.loadImagesAsync(fileName, part);
-    }
-
-    return part;
-  }
+  public abstract async fetchSourceAsync(): Promise<any>;
+  public abstract findPartFilesAsync(): Promise<[string]>;
+  public abstract async readPartAsync(fileName: string): Promise<FritzingPart>;
 
   public async loadImagesAsync(fileName: string, part: FritzingPart): Promise<void> {
     for (let key in part.views) {
@@ -81,48 +56,10 @@ export class PartSource {
     }
   }
 
-  private async readImageAsync(partFileName: string, imageFileName: string): Promise<string> {
-    let filesToTry: [string] = [
-      path.join(path.dirname(partFileName), imageFileName),
-      path.join(this.targetPath, this.svgPath, imageFileName),
-    ];
-
-    for (let tryMe of filesToTry) {
-      if (!(await utils.fileExistsAsync(tryMe))) {
-        continue;
-      }
-
-      switch (this.loadImages) {
-        case ImageLoadStyle.Content:
-          return await utils.readFileAsync(tryMe);
-
-        case ImageLoadStyle.Url:
-          let commit = await git.latestCommitAsync(tryMe);
-          let relPath = path.relative(this.targetPath, tryMe);
-
-          let uri = URI(this.url);
-          let basePath = uri.path();
-          relPath = path.join(basePath, commit, relPath);
-
-          if (uri.domain() === 'github.com') {
-            uri = uri.domain('cdn.rawgit.com');
-          }
-
-          return uri
-            .path(relPath)
-            .toString();
-
-        case ImageLoadStyle.None:
-        default:
-          return null;
-      }
-    }
-
-    //throw new Error('Image not found: ' + imageFileName);
-  }
+  protected abstract async readImageAsync(partFileName: string, imageFileName: string): Promise<string>;
 
 
-  private async parsePartXml(xml: string): Promise<FritzingPart> {
+  protected async parsePartXml(xml: string): Promise<FritzingPart> {
     let source = await utils.convertFromXml(xml);
     let part = new FritzingPart();
 

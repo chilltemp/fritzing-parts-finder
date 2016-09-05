@@ -2,7 +2,8 @@ import * as chalk from 'chalk';
 import * as path from 'path';
 import * as ProgressBar from 'progress';
 import * as utils from './lib/utils';
-import { PartSource } from './lib/PartSource';
+import { GitPartSource } from './lib/GitPartSource';
+import { IPartSource, PartSource } from './lib/PartSource';
 import { IPartsFinderConfig } from './lib/interfaces.ts';
 import { FritzingPart } from './lib/FritzingPart';
 let config = require('./config') as IPartsFinderConfig;
@@ -18,7 +19,7 @@ async function main() {
 
   for (let src of config.sources) {
     let target = path.resolve(config.tempPath, src.name);
-    let partSource = new PartSource(src, target);
+    let partSource: IPartSource = new GitPartSource(src, target);
 
     console.log(chalk.cyan('Fetching:'), chalk.magenta(partSource.name), 'from', partSource.url);
     await partSource.fetchSourceAsync();
@@ -27,14 +28,28 @@ async function main() {
     let partFiles = await partSource.findPartFilesAsync();
 
     console.log(chalk.cyan('Processing:'), countFileTypes(partFiles));
-    let bar = new ProgressBar('[:bar]', {total: partFiles.length});
+    let bar = new ProgressBar('[:bar]', { total: partFiles.length });
 
     let processed = [] as [string];
     for (let fileName of partFiles) {
       try {
-        if (path.extname(fileName) === '.fzp') {
-          let part = await partSource.readPartAsync(fileName);
+        let part: FritzingPart = null;
+        let fileExt = path.extname(fileName);
 
+        switch (fileExt) {
+          case '.fzp':
+            part = await partSource.readPartAsync(fileName);
+            break;
+
+          case '.fzpz':
+            //part = await partSource.readFzpzAsync(fileName);
+            break;
+
+          default:
+            break;
+        }
+
+        if (part) {
           processed.push(fileName);
           parts.push(part);
           // console.log(part);

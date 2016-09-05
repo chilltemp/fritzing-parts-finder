@@ -8,6 +8,7 @@
   },
   "globalDependencies": {
     "html-to-text": "registry:dt/html-to-text#1.4.0+20151110020217",
+    "jszip": "registry:dt/jszip#0.0.0+20160709055933",
     "node": "registry:env/node#4.0.0+20160824014937",
     "progress": "registry:dt/progress#1.1.8+20160317120654",
     "urijs": "registry:dt/urijs#1.15.1+20160526132152",
